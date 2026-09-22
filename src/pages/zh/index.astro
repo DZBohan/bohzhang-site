@@ -1,22 +1,22 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Hero from '../../components/Hero.astro';
-import { useTranslations } from '../../i18n/ui';
+import { useTranslations, projects } from '../../i18n/ui';
 const lang = 'zh' as const;
 const t = useTranslations(lang);
+const cards = projects[lang];
 ---
 
-<Base lang={lang} title="张博涵 — 免疫学与计算生物学"
-      description={t('hero.tagline')}>
+<Base lang={lang} title="张伯晗" description={t('hero.tagline')}>
   <Hero name={t('hero.name')} role={t('hero.role')} tagline={t('hero.tagline')}
-        cta={t('hero.cta')} ctaHref="#research" />
+        cta={t('hero.cta')} ctaHref="#work" />
 
   <section id="about" class="wrap">
     <h2>{t('about.title')}</h2>
     <p>{t('about.body')}</p>
   </section>
 
-  <section id="research" class="wrap">
+  <section id="work" class="wrap">
     <h2>{t('research.title')}</h2>
     <p>{t('research.body')}</p>
     <h3 style="font-size:1rem;margin:2rem 0 .5rem">{t('research.pubs')}</h3>
@@ -27,18 +27,12 @@ const t = useTranslations(lang);
     <h2>{t('projects.title')}</h2>
     <p>{t('projects.body')}</p>
     <div class="cards">
-      <div class="card">
-        <h3>自主 agent 体系</h3>
-        <p>跑在自己服务器上的一组 agent：后台任务托管、跨模型委托，以及一条字幕流水线——已经端到端处理完整季的录像。</p>
-      </div>
-      <div class="card">
-        <h3>空间多组学流程</h3>
-        <p>为论文第一阶段（观察性研究）搭的数据处理与分析工具链。</p>
-      </div>
-      <div class="card">
-        <h3>硬核读书</h3>
-        <p>一个静态书库，出版公有领域经典的中文译本。以文本为先，无账号、无付费墙。</p>
-      </div>
+      {cards.map((c) => (
+        <div class="card">
+          <h3>{c.title}</h3>
+          <p>{c.body}</p>
+        </div>
+      ))}
     </div>
   </section>
 

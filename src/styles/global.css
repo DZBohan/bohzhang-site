@@ -91,6 +91,17 @@ section p { max-width: 42rem; margin: 0 0 1rem; }
 
 footer { border-top: 1px solid var(--line); padding-block: 2.5rem; color: var(--fg-dim); font-size: 0.85rem; }
 
+/* ── 中文排版修正 ──────────────────────────────
+   上面那些字距是为英文调的：负字距收紧字母、大写+宽字距做标签。
+   套到中文上会出问题——中文没有大小写，但字距照样生效，
+   结果标签行显得松垮、大标题反而发挤。这里按语言单独还原。 */
+:lang(zh) .hero h1 { letter-spacing: 0; }
+:lang(zh) .hero .role { letter-spacing: 0.02em; text-transform: none; }
+:lang(zh) section h2 { letter-spacing: 0.04em; text-transform: none; }
+:lang(zh) .nav-brand { letter-spacing: 0; }
+/* 中文正文行距略放宽，便于阅读 */
+:lang(zh) body, :lang(zh) section p { line-height: 1.85; }
+
 @media (max-width: 34rem) {
   .nav-inner { height: auto; padding-block: 0.7rem; flex-wrap: wrap; gap: 0.75rem; }
   .nav-links { margin-left: 0; width: 100%; order: 3; }
