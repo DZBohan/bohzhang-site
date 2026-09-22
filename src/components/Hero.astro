@@ -83,10 +83,18 @@ const { name, role, tagline, cta, ctaHref } = Astro.props;
     }, { passive: true });
     window.addEventListener('pointerleave', () => { pointer.x = pointer.y = -1e4; }, { passive: true });
 
-    // 滚出视口就停，省电
+    // ⚠️ 兜底：初始化后【立即】渲染，不把首帧的出现与否交给 IntersectionObserver。
+    // 之前的写法只在 observer 回调里 start()，observer 一旦延迟或不触发，
+    // 首屏就是一片纯黑且毫无补救——2026-09-22 用无头浏览器截图时实测到这个空白。
+    if (reduce) {
+      frame();                    // 减少动态效果：只画一帧静态图
+      cancelAnimationFrame(raf);
+    } else {
+      start();                    // 正常情况：直接开跑，不等 observer
+    }
+
+    // observer 只负责「滚出视口暂停、回到视口恢复」这一件事，不再承担启动职责
     new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? start() : stop())),
       { threshold: 0 }).observe(canvas);
-
-    if (reduce) { frame(); cancelAnimationFrame(raf); }  // 只画一帧静态图
   }
 </script>
