@@ -14,86 +14,103 @@ const { name, role, tagline, cta, ctaHref } = Astro.props;
 </div>
 
 <script>
-  // 首屏动效：粒子场 + 近邻连线。原生 Canvas，不引第三方库。
-  // 三条克制原则：尊重 prefers-reduced-motion、离屏即暂停、按面积定粒子数。
+  // 首屏装饰：缓慢漂移的点与近邻连线。原生 Canvas，无第三方库。
+  //
+  // 2026-09-22 互审后的四处修正（Sunna 指出，实测确认）：
+  //  1. 位移按【时间】累加，不再按帧 —— 原先 120Hz 屏上速度是 60Hz 的两倍
+  //  2. 取消指针推斥 —— 推力无回落机制，交互后会长期躁动
+  //  3. 粒子只生成在右半区，配合 CSS 遮罩渐隐，不与文字重叠
+  //  4. 数量按【可见装饰面积】计算，而非整幅画布 —— 只改上限几乎无效
   const canvas = document.getElementById('hero-canvas') as HTMLCanvasElement | null;
-  if (canvas) {
+  const wide = window.matchMedia('(min-width: 1025px)');
+
+  if (canvas && wide.matches) {
     const ctx = canvas.getContext('2d', { alpha: true })!;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let w = 0, h = 0, dpr = 1, raf = 0, running = false;
+
+    const VISIBLE_FROM = 0.5;   // 粒子生成起点（遮罩 55% 起渐隐，留一点余量）
+    const AREA_PER_PT  = 10000; // 每个粒子摊到的可见面积
+    const MAX_PTS      = 32;
+    const LINK         = 100;   // 连线距离
+    const LINK_ALPHA   = 0.08;  // 连线最大透明度
+    const DOT_ALPHA    = 0.30;
+    const DOT_R        = 1;
+
+    let w = 0, h = 0, raf = 0, running = false, last = 0;
     const pts: { x: number; y: number; vx: number; vy: number }[] = [];
-    const pointer = { x: -1e4, y: -1e4 };
 
-    function resize() {
-      const r = canvas!.getBoundingClientRect();
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      w = r.width; h = r.height;
-      canvas!.width = Math.round(w * dpr);
-      canvas!.height = Math.round(h * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      const target = Math.round(Math.min(110, Math.max(28, (w * h) / 13000)));
+    function seed() {
+      const x0 = w * VISIBLE_FROM;
+      const visibleArea = w * (1 - VISIBLE_FROM) * h;
+      const n = Math.min(MAX_PTS, Math.round(visibleArea / AREA_PER_PT));
       pts.length = 0;
-      for (let i = 0; i < target; i++) {
+      for (let i = 0; i < n; i++) {
+        const speed = 3 + Math.random() * 3;          // 3–6 px/秒（合速度）
+        const a = Math.random() * Math.PI * 2;
         pts.push({
-          x: Math.random() * w, y: Math.random() * h,
-          vx: (Math.random() - 0.5) * 0.22, vy: (Math.random() - 0.5) * 0.22,
+          x: x0 + Math.random() * (w - x0),
+          y: Math.random() * h,
+          vx: Math.cos(a) * speed,
+          vy: Math.sin(a) * speed,
         });
       }
     }
 
-    function frame() {
+    function resize() {
+      const r = canvas!.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = r.width; h = r.height;
+      canvas!.width = Math.round(w * dpr);
+      canvas!.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      seed();
+    }
+
+    function draw(dt: number) {
+      const x0 = w * VISIBLE_FROM;
       ctx.clearRect(0, 0, w, h);
-      const LINK = 130;
+
       for (const p of pts) {
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < 0 || p.x > w) p.vx *= -1;
-        if (p.y < 0 || p.y > h) p.vy *= -1;
-        const dx = p.x - pointer.x, dy = p.y - pointer.y;
-        const d2 = dx * dx + dy * dy;
-        if (d2 < 18000 && d2 > 1) { const f = 0.00035; p.vx += dx * f; p.vy += dy * f; }
-        p.vx = Math.max(-0.7, Math.min(0.7, p.vx));
-        p.vy = Math.max(-0.7, Math.min(0.7, p.vy));
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        if (p.x < x0 || p.x > w) { p.vx *= -1; p.x = Math.max(x0, Math.min(w, p.x)); }
+        if (p.y < 0 || p.y > h) { p.vy *= -1; p.y = Math.max(0, Math.min(h, p.y)); }
       }
+
+      ctx.strokeStyle = '#8fb8ae'; ctx.lineWidth = 1;
       for (let i = 0; i < pts.length; i++) {
         for (let j = i + 1; j < pts.length; j++) {
           const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
           const d = Math.hypot(dx, dy);
           if (d < LINK) {
-            ctx.globalAlpha = (1 - d / LINK) * 0.16;
-            ctx.strokeStyle = '#5eead4'; ctx.lineWidth = 1;
+            ctx.globalAlpha = (1 - d / LINK) * LINK_ALPHA;
             ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke();
           }
         }
       }
-      ctx.globalAlpha = 0.65; ctx.fillStyle = '#5eead4';
-      for (const p of pts) { ctx.beginPath(); ctx.arc(p.x, p.y, 1.4, 0, Math.PI * 2); ctx.fill(); }
+
+      ctx.globalAlpha = DOT_ALPHA; ctx.fillStyle = '#8fb8ae';
+      for (const p of pts) { ctx.beginPath(); ctx.arc(p.x, p.y, DOT_R, 0, Math.PI * 2); ctx.fill(); }
       ctx.globalAlpha = 1;
+    }
+
+    function frame(now: number) {
+      const dt = Math.min((now - last) / 1000, 0.05);  // 上限 50ms：切回前台不跳变
+      last = now;
+      draw(dt);
       raf = requestAnimationFrame(frame);
     }
 
-    function start() { if (!running && !reduce) { running = true; raf = requestAnimationFrame(frame); } }
-    function stop() { if (running) { running = false; cancelAnimationFrame(raf); } }
+    function start() { if (!running && !reduce) { running = true; last = performance.now(); raf = requestAnimationFrame(frame); } }
+    function stop()  { if (running) { running = false; cancelAnimationFrame(raf); } }
 
     resize();
     window.addEventListener('resize', resize, { passive: true });
-    window.addEventListener('pointermove', (e) => {
-      const r = canvas!.getBoundingClientRect();
-      pointer.x = e.clientX - r.left; pointer.y = e.clientY - r.top;
-    }, { passive: true });
-    window.addEventListener('pointerleave', () => { pointer.x = pointer.y = -1e4; }, { passive: true });
 
-    // ⚠️ 兜底：初始化后【立即】渲染，不把首帧的出现与否交给 IntersectionObserver。
-    // 之前的写法只在 observer 回调里 start()，observer 一旦延迟或不触发，
-    // 首屏就是一片纯黑且毫无补救——2026-09-22 用无头浏览器截图时实测到这个空白。
-    if (reduce) {
-      frame();                    // 减少动态效果：只画一帧静态图
-      cancelAnimationFrame(raf);
-    } else {
-      start();                    // 正常情况：直接开跑，不等 observer
-    }
+    // 首帧不依赖 IntersectionObserver —— observer 若延迟触发，首屏会是一片空白
+    if (reduce) draw(0); else start();
 
-    // observer 只负责「滚出视口暂停、回到视口恢复」这一件事，不再承担启动职责
+    // observer 只负责离屏暂停、回到视口恢复
     new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? start() : stop())),
       { threshold: 0 }).observe(canvas);
   }
