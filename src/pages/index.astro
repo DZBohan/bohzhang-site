@@ -1,0 +1,23 @@
+---
+// 根路径 → 默认英文。用 meta refresh + canonical，静态托管下最稳妥。
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content="0; url=/en/" />
+    <link rel="canonical" href="https://bohzhang.com/en/" />
+    <title>Bohan Zhang</title>
+  </head>
+  <body>
+    <p>Redirecting to <a href="/en/">/en/</a> …</p>
+    <script is:inline>
+      // 回头客按上次选的语言走；新访客默认英文
+      try {
+        var saved = localStorage.getItem('lang');
+        location.replace(saved === 'zh' ? '/zh/' : '/en/');
+      } catch (e) { location.replace('/en/'); }
+    </script>
+  </body>
+</html>

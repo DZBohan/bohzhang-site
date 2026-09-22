@@ -1,0 +1,63 @@
+---
+import '../styles/global.css';
+import { languages, switchLangPath, useTranslations, type Lang } from '../i18n/ui';
+
+interface Props { lang: Lang; title: string; description: string; }
+const { lang, title, description } = Astro.props;
+const t = useTranslations(lang);
+const base = `/${lang}/`;
+const other: Lang = lang === 'en' ? 'zh' : 'en';
+---
+
+<!doctype html>
+<html lang={lang === 'zh' ? 'zh-CN' : 'en'}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+    <link rel="alternate" hreflang="en" href={new URL(switchLangPath(Astro.url, 'en'), Astro.site)} />
+    <link rel="alternate" hreflang="zh" href={new URL(switchLangPath(Astro.url, 'zh'), Astro.site)} />
+    <link rel="alternate" hreflang="x-default" href={new URL('/en/', Astro.site)} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="wrap nav-inner">
+        <a class="nav-brand" href={base}>{t('hero.name')}</a>
+        <div class="nav-links">
+          <a href={`${base}#about`}>{t('nav.about')}</a>
+          <a href={`${base}#research`}>{t('nav.research')}</a>
+          <a href={`${base}#projects`}>{t('nav.projects')}</a>
+          <a href={`${base}#contact`}>{t('nav.contact')}</a>
+        </div>
+        <div class="lang">
+          {Object.keys(languages).map((code) => (
+            <a href={switchLangPath(Astro.url, code as Lang)}
+               aria-current={code === lang ? 'true' : undefined}
+               hreflang={code}>{code.toUpperCase()}</a>
+          ))}
+        </div>
+      </div>
+    </nav>
+
+    <main><slot /></main>
+
+    <footer>
+      <div class="wrap">
+        <p style="margin:0">© {new Date().getFullYear()} {t('hero.name')} · {t('footer.built')}</p>
+      </div>
+    </footer>
+
+    <script is:inline>
+      // 记住语言选择（只用于下次访问根路径时的提示，不做强制跳转，避免干扰 SEO 与直接分享的链接）
+      try {
+        var seg = location.pathname.split('/')[1];
+        if (seg === 'en' || seg === 'zh') localStorage.setItem('lang', seg);
+      } catch (e) {}
+    </script>
+  </body>
+</html>

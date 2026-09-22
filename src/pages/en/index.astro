@@ -1,0 +1,49 @@
+---
+import Base from '../../layouts/Base.astro';
+import Hero from '../../components/Hero.astro';
+import { useTranslations } from '../../i18n/ui';
+const lang = 'en' as const;
+const t = useTranslations(lang);
+---
+
+<Base lang={lang} title="Bohan Zhang — Immunology & Computational Biology"
+      description={t('hero.tagline')}>
+  <Hero name={t('hero.name')} role={t('hero.role')} tagline={t('hero.tagline')}
+        cta={t('hero.cta')} ctaHref="#research" />
+
+  <section id="about" class="wrap">
+    <h2>{t('about.title')}</h2>
+    <p>{t('about.body')}</p>
+  </section>
+
+  <section id="research" class="wrap">
+    <h2>{t('research.title')}</h2>
+    <p>{t('research.body')}</p>
+    <h3 style="font-size:1rem;margin:2rem 0 .5rem">{t('research.pubs')}</h3>
+    <p class="muted">{t('research.pubsNote')}</p>
+  </section>
+
+  <section id="projects" class="wrap">
+    <h2>{t('projects.title')}</h2>
+    <p>{t('projects.body')}</p>
+    <div class="cards">
+      <div class="card">
+        <h3>Autonomous agent fleet</h3>
+        <p>A self-hosted set of agents running on my own server — background job supervision, delegation between models, and a subtitle pipeline that has processed a full season of recordings end to end.</p>
+      </div>
+      <div class="card">
+        <h3>Spatial multi-omics pipeline</h3>
+        <p>Processing and analysis tooling for the observational phase of my thesis work.</p>
+      </div>
+      <div class="card">
+        <h3>reformed-reading</h3>
+        <p>A static library publishing Chinese translations of public-domain classics. Text-first, no accounts, no paywall.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" class="wrap">
+    <h2>{t('contact.title')}</h2>
+    <p>{t('contact.body')} <a href="mailto:bohanzh7@gmail.com">bohanzh7@gmail.com</a></p>
+  </section>
+</Base>
