@@ -1,24 +1,76 @@
 ---
-// Root path -> English by default. A meta refresh plus canonical is the most
-// dependable approach on static hosting, with a script for returning readers.
+import '../styles/global.css';
+
+// Root path: a real language-selection page, not a bare redirect shell.
+//
+// Readers with JavaScript are sent straight to their language (effectively instant,
+// so they never see this page). Crawlers and JS-less clients get actual content:
+// the name in both scripts, both language entry points, and the site's section links.
+//
+// There is deliberately no <meta http-equiv="refresh"> — that would pull crawlers
+// away before they read anything. The previous version rendered 555 bytes whose only
+// visible text was "Bohan Zhang / Redirecting to /en/ / <script source>", which gives
+// a classifier almost nothing to work with.
+const site = 'https://bohzhang.com';
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="refresh" content="0; url=/en/" />
-    <link rel="canonical" href="https://bohzhang.com/en/" />
-    <title>Bohan Zhang</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bohan Zhang · 张伯晗</title>
+    <meta
+      name="description"
+      content="Personal site of Bohan Zhang (张伯晗). Available in English and Chinese."
+    />
+    <link rel="canonical" href={`${site}/`} />
+    <link rel="alternate" hreflang="en" href={`${site}/en/`} />
+    <link rel="alternate" hreflang="zh" href={`${site}/zh/`} />
+    <link rel="alternate" hreflang="x-default" href={`${site}/en/`} />
+    <meta property="og:title" content="Bohan Zhang · 张伯晗" />
+    <meta property="og:description" content="Personal site. Available in English and Chinese." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={`${site}/`} />
   </head>
+
   <body>
-    <p>Redirecting to <a href="/en/">/en/</a> …</p>
+    <main class="wrap" style="padding-block:96px;max-width:34rem">
+      <p class="role" style="font-family:var(--mono);font-size:.8125rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 1rem">
+        Personal site
+      </p>
+
+      <h1 style="font-size:clamp(2rem,3.2vw,2.5rem);font-weight:600;line-height:1.15;letter-spacing:-.015em;margin:0 0 .25rem">
+        Bohan Zhang
+      </h1>
+      <p lang="zh-CN" style="font-size:1.125rem;color:var(--fg-dim);margin:0 0 2rem">张伯晗</p>
+
+      <nav aria-label="Choose a language" style="display:flex;gap:.75rem;margin-bottom:2.5rem">
+        <a class="btn" href="/en/" hreflang="en">English</a>
+        <a class="btn" href="/zh/" hreflang="zh" lang="zh-CN">中文</a>
+      </nav>
+
+      <h2 style="font-size:.875rem;font-family:var(--mono);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-dim);margin:0 0 1rem">
+        Sections
+      </h2>
+      <ul style="list-style:none;padding:0;margin:0;display:grid;gap:.5rem;font-size:.95rem">
+        <li><a href="/en/#about">About</a> · <a href="/zh/#about" lang="zh-CN">关于</a></li>
+        <li><a href="/en/#work">Work</a> · <a href="/zh/#work" lang="zh-CN">在做什么</a></li>
+        <li><a href="/en/#projects">Projects</a> · <a href="/zh/#projects" lang="zh-CN">项目</a></li>
+        <li><a href="/en/#contact">Contact</a> · <a href="/zh/#contact" lang="zh-CN">联系</a></li>
+      </ul>
+    </main>
+
     <script is:inline>
-      // Returning readers land on whichever language they last chose; new ones get English.
+      // Send readers to their language immediately. Returning visitors keep their
+      // previous choice; everyone else gets English. Without JS this page stays put
+      // and remains fully usable, which is the point.
       try {
         var saved = localStorage.getItem('lang');
         location.replace(saved === 'zh' ? '/zh/' : '/en/');
-      } catch (e) { location.replace('/en/'); }
+      } catch (e) {
+        location.replace('/en/');
+      }
     </script>
   </body>
 </html>
