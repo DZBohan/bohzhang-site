@@ -2,15 +2,15 @@ export const languages = { en: 'English', zh: '中文' } as const;
 export type Lang = keyof typeof languages;
 export const defaultLang: Lang = 'en';
 
-/** 从路径里取语言；取不到就用默认语言 */
+/** Read the locale from the path, falling back to the default. */
 export function getLangFromUrl(url: URL): Lang {
   const [, seg] = url.pathname.split('/');
   return seg in languages ? (seg as Lang) : defaultLang;
 }
 
 /**
- * 切换语言时【停在同一页】——把路径里的语言段换掉，其余保持不变。
- * /zh/research → /en/research，而不是弹回首页。
+ * Switching language stays on the same page: swap only the locale segment.
+ * /zh/work -> /en/work, rather than bouncing back to the homepage.
  */
 export function switchLangPath(url: URL, to: Lang): string {
   const parts = url.pathname.split('/').filter(Boolean);
@@ -20,9 +20,11 @@ export function switchLangPath(url: URL, to: Lang): string {
 }
 
 /* ────────────────────────────────────────────────────────────
-   ⚠️ 除姓名外，以下文案【全部是占位符】，等 Bohan 给细节后替换。
-   占位符一律写成「【待填：说明】」的形式，一眼可辨，不会被误当成真内容。
-   2026-09-22：此前这里有一版我自己编的免疫学方向文案，属于臆测，已全部移除。
+   Apart from the name, every string below is a PLACEHOLDER awaiting real copy.
+   They are written as "[ TODO — ... ]" / "【待填：…】" so they can never be
+   mistaken for finished content.
+   2026-09-22: an earlier draft invented a research background that turned out
+   to be wrong. It has been removed rather than rewritten into another guess.
    ──────────────────────────────────────────────────────────── */
 
 export const ui = {
@@ -86,8 +88,8 @@ export const ui = {
   },
 } as const;
 
-/* 项目卡片。真实存在的先留着（标了 real），其余是占位。
-   要不要把这些放上个人主页，由 Bohan 决定；不要的直接删条目。 */
+/* Project cards. Entries marked `real: true` describe things that actually exist;
+   whether they belong on a personal homepage is the owner's call — delete freely. */
 export const projects = {
   en: [
     { real: true, title: 'Autonomous agent fleet',

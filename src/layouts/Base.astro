@@ -6,7 +6,6 @@ interface Props { lang: Lang; title: string; description: string; }
 const { lang, title, description } = Astro.props;
 const t = useTranslations(lang);
 const base = `/${lang}/`;
-const other: Lang = lang === 'en' ? 'zh' : 'en';
 ---
 
 <!doctype html>
@@ -53,7 +52,9 @@ const other: Lang = lang === 'en' ? 'zh' : 'en';
     </footer>
 
     <script is:inline>
-      // 记住语言选择（只用于下次访问根路径时的提示，不做强制跳转，避免干扰 SEO 与直接分享的链接）
+      // Remember the reader's language for a later visit to the root path.
+      // Deliberately does not redirect: a /zh/ link shared with an English reader
+      // should still open in Chinese, as the sender intended.
       try {
         var seg = location.pathname.split('/')[1];
         if (seg === 'en' || seg === 'zh') localStorage.setItem('lang', seg);

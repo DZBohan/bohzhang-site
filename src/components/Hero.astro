@@ -14,13 +14,17 @@ const { name, role, tagline, cta, ctaHref } = Astro.props;
 </div>
 
 <script>
-  // 首屏装饰：缓慢漂移的点与近邻连线。原生 Canvas，无第三方库。
+  // Decorative background: slowly drifting points with near-neighbour links.
+  // Hand-written Canvas, no animation library.
   //
-  // 2026-09-22 互审后的四处修正（Sunna 指出，实测确认）：
-  //  1. 位移按【时间】累加，不再按帧 —— 原先 120Hz 屏上速度是 60Hz 的两倍
-  //  2. 取消指针推斥 —— 推力无回落机制，交互后会长期躁动
-  //  3. 粒子只生成在右半区，配合 CSS 遮罩渐隐，不与文字重叠
-  //  4. 数量按【可见装饰面积】计算，而非整幅画布 —— 只改上限几乎无效
+  // Four corrections from the 2026-09-22 design review, each verified by measurement:
+  //  1. Position integrates over elapsed time, not per frame — previously a 120 Hz display
+  //     ran the drift at twice the speed of a 60 Hz one.
+  //  2. Pointer repulsion removed — the impulse had no decay, so the field stayed agitated
+  //     long after the cursor left.
+  //  3. Particles stay out of the text column, paired with a CSS gradient mask.
+  //  4. Count derives from the *visible* decorated area, not the whole canvas. Lowering only
+  //     the cap was close to a no-op: at 1440x900 the formula produced 78 against a cap of 110.
   const canvas = document.getElementById('hero-canvas') as HTMLCanvasElement | null;
   const wide = window.matchMedia('(min-width: 1025px)');
 
@@ -28,11 +32,11 @@ const { name, role, tagline, cta, ctaHref } = Astro.props;
     const ctx = canvas.getContext('2d', { alpha: true })!;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const VISIBLE_FROM = 0.5;   // 粒子生成起点（遮罩 55% 起渐隐，留一点余量）
-    const AREA_PER_PT  = 10000; // 每个粒子摊到的可见面积
+    const VISIBLE_FROM = 0.5;   // particles spawn right of this; mask fades in from 55%
+    const AREA_PER_PT  = 10000; // visible px² per particle
     const MAX_PTS      = 32;
-    const LINK         = 100;   // 连线距离
-    const LINK_ALPHA   = 0.08;  // 连线最大透明度
+    const LINK         = 100;   // link distance
+    const LINK_ALPHA   = 0.08;  // peak link opacity
     const DOT_ALPHA    = 0.30;
     const DOT_R        = 1;
 
@@ -45,7 +49,7 @@ const { name, role, tagline, cta, ctaHref } = Astro.props;
       const n = Math.min(MAX_PTS, Math.round(visibleArea / AREA_PER_PT));
       pts.length = 0;
       for (let i = 0; i < n; i++) {
-        const speed = 3 + Math.random() * 3;          // 3–6 px/秒（合速度）
+        const speed = 3 + Math.random() * 3;          // 3–6 px/s, resultant
         const a = Math.random() * Math.PI * 2;
         pts.push({
           x: x0 + Math.random() * (w - x0),
@@ -95,7 +99,7 @@ const { name, role, tagline, cta, ctaHref } = Astro.props;
     }
 
     function frame(now: number) {
-      const dt = Math.min((now - last) / 1000, 0.05);  // 上限 50ms：切回前台不跳变
+      const dt = Math.min((now - last) / 1000, 0.05);  // cap at 50ms so returning to the tab doesn't jump
       last = now;
       draw(dt);
       raf = requestAnimationFrame(frame);
@@ -107,10 +111,11 @@ const { name, role, tagline, cta, ctaHref } = Astro.props;
     resize();
     window.addEventListener('resize', resize, { passive: true });
 
-    // 首帧不依赖 IntersectionObserver —— observer 若延迟触发，首屏会是一片空白
+    // The first frame must not depend on IntersectionObserver: if the callback is delayed,
+    // the hero renders as flat black with no recovery path.
     if (reduce) draw(0); else start();
 
-    // observer 只负责离屏暂停、回到视口恢复
+    // The observer only pauses off-screen and resumes on re-entry.
     new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? start() : stop())),
       { threshold: 0 }).observe(canvas);
   }

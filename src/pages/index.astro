@@ -1,5 +1,6 @@
 ---
-// 根路径 → 默认英文。用 meta refresh + canonical，静态托管下最稳妥。
+// Root path -> English by default. A meta refresh plus canonical is the most
+// dependable approach on static hosting, with a script for returning readers.
 ---
 
 <!doctype html>
@@ -13,7 +14,7 @@
   <body>
     <p>Redirecting to <a href="/en/">/en/</a> …</p>
     <script is:inline>
-      // 回头客按上次选的语言走；新访客默认英文
+      // Returning readers land on whichever language they last chose; new ones get English.
       try {
         var saved = localStorage.getItem('lang');
         location.replace(saved === 'zh' ? '/zh/' : '/en/');

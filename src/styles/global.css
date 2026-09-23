@@ -3,10 +3,10 @@
   --bg-elev: #12151a;
   --fg: #e8eaed;
   --fg-dim: #9aa3ad;
-  --accent: #8fb8ae;          /* 低饱和，按功能分配：链接 / CTA 文字 / 交互提示 */
+  --accent: #8fb8ae;          /* low saturation; assigned by function: links, CTA text, state */
   --line: #1e232b;
-  --line-strong: #35454a;     /* CTA 默认边框 */
-  --surface-active: #1b2528;  /* 语言选中态、CTA 悬停底色 */
+  --line-strong: #35454a;     /* CTA resting border */
+  --surface-active: #1b2528;  /* selected language, CTA hover */
   --max: 68rem;               /* 1088px */
   --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -34,7 +34,7 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 .wrap { width: 100%; max-width: var(--max); margin-inline: auto; padding-inline: 1.25rem; }
 
-/* ── 导航 ───────────────────────────── */
+/* ── Navigation ─────────────────────── */
 .nav {
   position: sticky; top: 0; z-index: 20;
   background: color-mix(in oklab, var(--bg) 82%, transparent);
@@ -55,15 +55,16 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .lang a[aria-current="true"] { background: var(--surface-active); color: var(--fg); font-weight: 600; }
 .lang a:hover { text-decoration: none; color: var(--fg); }
 
-/* ── 首屏 ───────────────────────────── */
+/* ── Hero ───────────────────────────── */
 .hero {
   position: relative;
-  min-height: clamp(400px, 56svh, 560px);   /* svh：手机地址栏伸缩时不跳动 */
+  min-height: clamp(400px, 56svh, 560px);   /* svh: no jump as mobile browser chrome collapses */
   display: grid; align-items: center; overflow: hidden;
 }
 .hero canvas {
   position: absolute; inset: 0; width: 100%; height: 100%; display: block;
-  /* 渐隐而非硬切：左 55% 完全透明，到 75% 全显，避免出现装饰性的矩形边界 */
+  /* Fade rather than clip: fully transparent to 55%, fully visible by 75%,
+     so the decoration has no hard rectangular edge. */
   -webkit-mask-image: linear-gradient(to right, transparent 55%, #000 75%);
           mask-image: linear-gradient(to right, transparent 55%, #000 75%);
 }
@@ -80,7 +81,7 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   text-transform: uppercase; color: var(--accent); margin: 0 0 1rem;
 }
 .hero .tagline {
-  font-size: clamp(1rem, 1.2vw, 1.125rem);  /* 手机 16px，桌面 18px */
+  font-size: clamp(1rem, 1.2vw, 1.125rem);  /* 16px mobile, 18px desktop */
   color: var(--fg-dim); max-width: 34rem; margin: 0 0 1.75rem;
 }
 .btn {
@@ -90,14 +91,14 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 .btn:hover { border-color: var(--accent); background: var(--surface-active); text-decoration: none; }
 
-/* ── 区块 ───────────────────────────── */
+/* ── Sections ───────────────────────── */
 section {
   padding-block: 56px;
   border-top: 1px solid var(--line);
-  scroll-margin-top: 72px;        /* 粘性导航不遮锚点标题 */
+  scroll-margin-top: 72px;        /* keep the sticky nav off anchored headings */
 }
 section h2 {
-  font-size: 0.875rem;            /* 14px —— 比 12.8px 更站得住，同时保持标签形态 */
+  font-size: 0.875rem;            /* 14px — holds up better than 12.8px did against 16px body */
   font-family: var(--mono); font-weight: 600;
   letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--fg-dim); margin: 0 0 1.25rem;
@@ -112,20 +113,21 @@ section p { max-width: 42rem; margin: 0 0 1rem; }
 
 footer { border-top: 1px solid var(--line); padding-block: 2.5rem; color: var(--fg-dim); font-size: 0.85rem; }
 
-/* ── 手机 ───────────────────────────── */
+/* ── Mobile ─────────────────────────── */
 @media (max-width: 640px) {
-  .hero { min-height: 0; }                 /* 短内容不占满整屏 */
+  .hero { min-height: 0; }                 /* short content shouldn't fill the viewport */
   .hero-content { padding-block: 64px; }
   section { padding-block: 40px; scroll-margin-top: 112px; }
   .nav-inner { min-height: 0; padding-block: 0.5rem; flex-wrap: wrap; gap: 8px; }
   .nav-links { margin-left: 0; width: 100%; order: 3; gap: 1rem; }
   .nav-links a { display: inline-flex; align-items: center; min-height: 40px; }
-  .lang { margin-left: auto; }             /* 语言切换对齐右边界，而不是贴着名字 */
+  .lang { margin-left: auto; }             /* align to the right edge, not against the name */
 }
 
-/* ── 中文排版修正 ──────────────────────────────
-   上面的字距是为英文调的（负字距收紧字母、大写+宽字距做标签）。
-   中文没有大小写，但字距照样生效，会让标签松垮、标题发挤。按语言单独还原。 */
+/* ── Chinese typography corrections ─────────────────────────
+   The tracking above is tuned for Latin text: negative letter-spacing tightens letterforms,
+   and uppercase + wide tracking makes a label. Neither transfers to Chinese — there is no
+   case, but the tracking still applies, leaving labels loose and headings cramped. */
 :lang(zh) .hero h1 { letter-spacing: 0; }
 :lang(zh) .hero .role { letter-spacing: 0.02em; text-transform: none; }
 :lang(zh) section h2 { letter-spacing: 0.02em; text-transform: none; }
