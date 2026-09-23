@@ -1,0 +1,7 @@
+name = "bohzhang-site"
+compatibility_date = "2026-09-22"
+
+# Static site: Astro builds to ./dist, served as Workers static assets (no Worker script).
+# Mirrors the setup already proven on reformed-reading.
+[assets]
+directory = "./dist"

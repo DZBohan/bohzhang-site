@@ -54,10 +54,13 @@ a 60 Hz one. It pauses off-screen and renders a single static frame when
 
 ## Deployment
 
-Cloudflare Pages, building from `main`:
+Cloudflare **Workers** with static assets (not Pages), building from `main`.
+`wrangler.toml` designates `./dist` as the asset directory; there is no Worker script.
 
 | Setting | Value |
 |---|---|
-| Framework preset | Astro |
 | Build command | `npm run build` |
-| Output directory | `dist` |
+| Deploy command | `npx wrangler deploy` |
+| Preview command | `npx wrangler versions upload` |
+
+Node is pinned to 22 via `.nvmrc`; Astro 5 requires ≥ 18.17.
